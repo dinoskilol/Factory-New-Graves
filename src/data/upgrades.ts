@@ -1,8 +1,10 @@
 import type { UpgradeDisplayNode, UpgradeNode } from '../types'
 import { assertGraphIntegrity } from '../lib/tree'
 
+const assetBaseUrl = import.meta.env.BASE_URL
+
 const statIcon = (file: string, label: string) =>
-  `<img class="description-stat-icon" src="/assets/icons/${file}" alt="${label}" title="${label}" />`
+  `<img class="description-stat-icon" src="${assetBaseUrl}assets/icons/${file}" alt="${label}" title="${label}" />`
 
 const HEALTH = statIcon('Health.svg', 'Health')
 const BASE_HEALTH = statIcon('Health.svg', 'Base Health')

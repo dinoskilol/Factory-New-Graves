@@ -33,7 +33,7 @@ function UpgradeSummaryIcon({ upgrade }: { upgrade: UpgradeNode }) {
 
   return (
     <img
-      src={`/assets/icons/${upgrade.iconFile}`}
+      src={`${assetBaseUrl}assets/icons/${upgrade.iconFile}`}
       alt=""
       width={28}
       height={28}
