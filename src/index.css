@@ -139,6 +139,8 @@ h6 {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  padding-bottom: 40px;
+  box-sizing: border-box;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -457,15 +459,20 @@ h6 {
 
 .frame-column {
   align-self: start;
+  min-width: 0;
 }
 
 .frame-column h2 {
   position: sticky;
   top: 0;
-  z-index: 1;
-  margin-bottom: 12px;
+  z-index: 2;
+  margin: 0 0 12px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  background: var(--panel);
+  box-shadow: 0 10px 14px -12px rgba(8, 17, 31, 0.95);
   margin-top: 0;
-  background: transparent;
   padding-bottom: 8px;
   color: var(--accent);
 }
@@ -594,7 +601,7 @@ h6 {
 }
 
 .tree-branch.visible {
-  max-height: 1000px;
+  max-height: 10000px;
   opacity: 1;
   transform: translateY(0);
   margin-bottom: 18px;
