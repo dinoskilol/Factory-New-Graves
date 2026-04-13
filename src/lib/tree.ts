@@ -29,6 +29,57 @@ export function getTotalGold(nodes: UpgradeNode[], selectedIds: ReadonlySet<stri
   return nodes.reduce((total, node) => total + (selectedIds.has(node.id) ? node.cost : 0), 0)
 }
 
+function getVariantBaseId(nodeId: string) {
+  if (nodeId.endsWith('_plus_plus')) {
+    return nodeId.slice(0, -'_plus_plus'.length)
+  }
+
+  if (nodeId.endsWith('_plus')) {
+    return nodeId.slice(0, -'_plus'.length)
+  }
+
+  return nodeId
+}
+
+function getVariantTier(nodeId: string) {
+  if (nodeId.endsWith('_plus_plus')) {
+    return 2
+  }
+
+  if (nodeId.endsWith('_plus')) {
+    return 1
+  }
+
+  return 0
+}
+
+export function getActivatedUpgrades(nodes: UpgradeNode[], selectedIds: ReadonlySet<string>) {
+  const highestSelectedTierByBaseId = new Map<string, number>()
+
+  for (const node of nodes) {
+    if (!selectedIds.has(node.id)) {
+      continue
+    }
+
+    const baseId = getVariantBaseId(node.id)
+    const tier = getVariantTier(node.id)
+    const currentTier = highestSelectedTierByBaseId.get(baseId) ?? -1
+
+    if (tier > currentTier) {
+      highestSelectedTierByBaseId.set(baseId, tier)
+    }
+  }
+
+  return nodes.filter((node) => {
+    if (!selectedIds.has(node.id)) {
+      return false
+    }
+
+    const baseId = getVariantBaseId(node.id)
+    return highestSelectedTierByBaseId.get(baseId) === getVariantTier(node.id)
+  })
+}
+
 export function assertGraphIntegrity(nodes: UpgradeNode[]) {
   const map = createUpgradeMap(nodes)
 

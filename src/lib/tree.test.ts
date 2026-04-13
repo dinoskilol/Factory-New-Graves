@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { upgrades } from '../data/upgrades'
 import { exportBuildCode, parseBuildCode } from './buildCode'
-import { assertGraphIntegrity, getNodeState, getTotalGold, importBuild, normalizeSelectedSet } from './tree'
+import {
+  assertGraphIntegrity,
+  getActivatedUpgrades,
+  getNodeState,
+  getTotalGold,
+  importBuild,
+  normalizeSelectedSet,
+} from './tree'
 
 describe('upgrade graph', () => {
   it('has valid references and no cycles', () => {
@@ -34,6 +41,24 @@ describe('upgrade graph', () => {
   it('totals gold correctly', () => {
     const selected = new Set(['power_frame', 'blast_radius', 'blast_radius_plus'])
     expect(getTotalGold(upgrades, selected)).toBe(8)
+  })
+
+  it('lists only the highest selected plus tier while keeping distinct upgrades', () => {
+    const selected = new Set([
+      'marksman_frame',
+      'precision_scope',
+      'precision_scope_plus',
+      'precision_scope_plus_plus',
+      'double_tap',
+      'triple_tap',
+    ])
+
+    expect(getActivatedUpgrades(upgrades, selected).map((node) => node.id)).toEqual([
+      'marksman_frame',
+      'precision_scope_plus_plus',
+      'double_tap',
+      'triple_tap',
+    ])
   })
 
   it('prunes invalid descendants when a selected prerequisite is removed', () => {

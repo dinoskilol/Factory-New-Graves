@@ -1,10 +1,12 @@
-import { startTransition, useEffect, useMemo, useState } from 'react'
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
+import { AtSign, CircleHelp, CodeXml } from 'lucide-react'
+import tippy from 'tippy.js'
 import './index.css'
 import { ModelViewer } from './components/ModelViewer'
 import { UpgradeTree } from './components/UpgradeTree'
 import { upgradeDisplayNodes, upgrades } from './data/upgrades'
 import { exportBuildCode } from './lib/buildCode'
-import { getTotalGold, importBuild, normalizeSelectedSet } from './lib/tree'
+import { getActivatedUpgrades, getTotalGold, importBuild, normalizeSelectedSet } from './lib/tree'
 
 type TabId = 'builder' | 'full'
 
@@ -16,7 +18,6 @@ function getInitialState() {
     return {
       selectedIds: emptySelectedIds,
       codeField: emptyCode,
-      message: 'Hover an upgrade to read its description.',
     }
   }
 
@@ -27,7 +28,6 @@ function getInitialState() {
     return {
       selectedIds: emptySelectedIds,
       codeField: emptyCode,
-      message: 'Hover an upgrade to read its description.',
     }
   }
 
@@ -36,25 +36,28 @@ function getInitialState() {
     return {
       selectedIds: new Set(imported),
       codeField: exportBuildCode(imported),
-      message: 'Build loaded from URL.',
     }
   } catch (error) {
     return {
       selectedIds: emptySelectedIds,
       codeField: emptyCode,
-      message: error instanceof Error ? error.message : 'Unable to load build from URL.',
     }
   }
 }
 
 function App() {
+  const infoButtonRef = useRef<HTMLButtonElement | null>(null)
   const initialState = useMemo(() => getInitialState(), [])
   const [activeTab, setActiveTab] = useState<TabId>('builder')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(initialState.selectedIds)
   const [codeField, setCodeField] = useState(initialState.codeField)
-  const [message, setMessage] = useState(initialState.message)
 
   const totalGold = useMemo(() => getTotalGold(upgrades, selectedIds), [selectedIds])
+  const selectedUpgrades = useMemo(
+    () => upgrades.filter((upgrade) => selectedIds.has(upgrade.id)),
+    [selectedIds],
+  )
+  const activatedUpgrades = useMemo(() => getActivatedUpgrades(upgrades, selectedIds), [selectedIds])
   const exportCode = useMemo(() => exportBuildCode(selectedIds), [selectedIds])
 
   useEffect(() => {
@@ -69,6 +72,25 @@ function App() {
     window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
   }, [exportCode, selectedIds.size])
 
+  useEffect(() => {
+    const target = infoButtonRef.current
+
+    if (!target) {
+      return
+    }
+
+    const instance = tippy(target, {
+      content:
+        'Build and share Factory New Graves upgrade paths, compare frame trees, and copy importable build codes.',
+      maxWidth: 320,
+      placement: 'bottom',
+    })
+
+    return () => {
+      instance.destroy()
+    }
+  }, [])
+
   function handleSelect(nodeId: string) {
     const nextSelectedIds = new Set(selectedIds)
     if (nextSelectedIds.has(nodeId)) {
@@ -80,14 +102,12 @@ function App() {
     const normalizedSelectedIds = normalizeSelectedSet(upgrades, nextSelectedIds)
     setSelectedIds(normalizedSelectedIds)
     setCodeField(exportBuildCode(normalizedSelectedIds))
-    setMessage('Build code updated.')
   }
 
   function handleReset() {
     const nextSelectedIds = new Set<string>()
     setSelectedIds(nextSelectedIds)
     setCodeField('')
-    setMessage('Build reset.')
   }
 
   function handleCodeChange(value: string) {
@@ -100,7 +120,6 @@ function App() {
         setSelectedIds(nextSelectedIds)
       })
       setCodeField('')
-      setMessage('Build reset.')
       return
     }
 
@@ -112,10 +131,20 @@ function App() {
       })
 
       setCodeField(exportBuildCode(imported))
-      setMessage('Build code applied.')
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Unable to apply build code.')
+    } catch {}
+  }
+
+  async function handleCopyBuildCode() {
+    const valueToCopy = exportCode
+
+    if (typeof navigator === 'undefined' || !navigator.clipboard) {
+      return
     }
+
+    try {
+      await navigator.clipboard.writeText(valueToCopy)
+      setCodeField(valueToCopy)
+    } catch {}
   }
 
   return (
@@ -123,13 +152,31 @@ function App() {
       <section className="builder-panel">
         <div className="builder-header">
           <div className="title-row">
-            <span className="set-label">TFT Set 17</span>
-            <h1>Factory New Graves Builder</h1>
+            <h1>TFT Set 17 Factory New Graves Builder</h1>
+            <button
+              ref={infoButtonRef}
+              type="button"
+              className="info-button"
+              aria-label="About this website"
+            >
+              <CircleHelp size={16} strokeWidth={2.2} />
+            </button>
           </div>
 
-          <div className="meta-row">
-            <p className="meta-item">Total Gold: {totalGold}</p>
-            <p className="meta-item">Selected Upgrades: {selectedIds.size}</p>
+          <div className="link-row">
+            <a
+              href="https://github.com/dinoskilol/Factory-New-Graves"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub repository"
+            >
+              <CodeXml size={16} strokeWidth={2.2} />
+              <span>GitHub</span>
+            </a>
+            <a href="https://x.com/dinoskiLoL" target="_blank" rel="noreferrer" aria-label="X profile">
+              <AtSign size={16} strokeWidth={2.2} />
+              <span>X</span>
+            </a>
           </div>
 
           <div className="controls-row">
@@ -141,28 +188,7 @@ function App() {
             </button>
           </div>
 
-          {activeTab === 'builder' ? (
-            <div className="controls-block">
-              <button type="button" onClick={handleReset}>
-                Reset
-              </button>
-              <div style={{ marginTop: '8px' }}>
-                <label htmlFor="build-code">Build code</label>
-              </div>
-              <input
-                id="build-code"
-                type="text"
-                value={codeField}
-                onChange={(event) => handleCodeChange(event.target.value)}
-                placeholder="Paste build code"
-                spellCheck={false}
-                className="build-code-input"
-              />
-              <p>{message}</p>
-            </div>
-          ) : (
-            <p>Full Tree shows every upgrade without any unlock gating.</p>
-          )}
+          {activeTab === 'full' ? <p>Full Tree shows every upgrade without any unlock gating.</p> : null}
         </div>
 
         <div className="tree-scroll-area">
@@ -177,7 +203,16 @@ function App() {
       </section>
 
       <aside className="model-panel">
-        <ModelViewer />
+        <ModelViewer
+          activeUpgrades={activatedUpgrades}
+          selectedUpgrades={selectedUpgrades}
+          totalGold={totalGold}
+          showBuildControls={activeTab === 'builder'}
+          buildCode={codeField}
+          onBuildCodeChange={handleCodeChange}
+          onReset={handleReset}
+          onCopyBuildCode={handleCopyBuildCode}
+        />
       </aside>
     </main>
   )

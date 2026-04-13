@@ -5,6 +5,8 @@ import { upgradeDescriptionHtmlById } from '../data/upgrades'
 import { getNodeState } from '../lib/tree'
 import type { UpgradeDisplayNode, UpgradeNode } from '../types'
 
+const assetBaseUrl = import.meta.env.BASE_URL
+
 type UpgradeTreeProps = {
   nodes: UpgradeNode[]
   displayNodes: UpgradeDisplayNode[]
@@ -31,7 +33,7 @@ function escapeHtml(value: string) {
 }
 
 function getStatIconHtml(file: string, label: string) {
-  return `<img class="description-stat-icon" src="/assets/icons/${file}" alt="${escapeHtml(label)}" title="${escapeHtml(label)}" />`
+  return `<img class="description-stat-icon" src="${assetBaseUrl}assets/icons/${file}" alt="${escapeHtml(label)}" title="${escapeHtml(label)}" />`
 }
 
 function getTooltipHtml(node: UpgradeNode) {
@@ -55,7 +57,7 @@ function UpgradeIcon({ node }: { node: UpgradeNode }) {
 
   return (
     <img
-      src={`/assets/icons/${node.iconFile}`}
+      src={`${assetBaseUrl}assets/icons/${node.iconFile}`}
       alt=""
       width={40}
       height={40}
@@ -66,7 +68,7 @@ function UpgradeIcon({ node }: { node: UpgradeNode }) {
 }
 
 function GoldIcon() {
-  return <img src="/assets/icons/gold2.png" alt="gold" className="gold-icon" />
+  return <img src={`${assetBaseUrl}assets/icons/gold2.png`} alt="gold" className="gold-icon" />
 }
 
 function UpgradeCard({
