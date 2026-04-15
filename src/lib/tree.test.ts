@@ -40,7 +40,7 @@ describe('upgrade graph', () => {
 
   it('totals gold correctly', () => {
     const selected = new Set(['power_frame', 'blast_radius', 'blast_radius_plus'])
-    expect(getTotalGold(upgrades, selected)).toBe(8)
+    expect(getTotalGold(upgrades, selected)).toBe(5)
   })
 
   it('lists only the highest selected plus tier while keeping distinct upgrades', () => {

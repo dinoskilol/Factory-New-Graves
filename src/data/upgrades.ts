@@ -256,7 +256,7 @@ export const upgrades: UpgradeNode[] = [
     id: 'power_frame',
     name: 'Power Frame',
     description: 'Gain Precision and increase Ability damage by 15%.',
-    cost: 3,
+    cost: 0,
     iconFile: 'power_frame.png',
     frame: 'power',
     parents: [],
